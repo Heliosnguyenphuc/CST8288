@@ -26,25 +26,26 @@ public class ElevatorSystemIMP implements ElevatorPanel, ElevatorSystem {
 	private final Object REQUEST_LOCK = new Object();
 	private AtomicBoolean shutdown = new AtomicBoolean(false);
 	private MovingState callDirection;
-	private Elevator elevator;
+
 
 	private Runnable run = () -> {
-
 		AtomicInteger counters[] = new AtomicInteger[stops.size()];
-		// init counters set it false 
+
 		for (int i = 0; i < counters.length; i++) {
 			counters[i] = new AtomicInteger();
 		}
 
-		while (!shutdown.get()) {
-
+		while (!shutdown.get()) 
+		{
 			for (Elevator e : stops.keySet()) {
 				List<Integer> l = stops.get(e);
 				if (!e.isIdle() || l.isEmpty() || counters[e.id()].get() != 0) {
 					continue;
 				}
-				synchronized (REQUEST_LOCK) {
-					int f = l.remove(0);
+
+				synchronized (REQUEST_LOCK)
+				{
+					int f = l.remove(0);			
 					counters[e.id()].incrementAndGet();
 					service.submit(() -> {
 						e.moveTo(f);
@@ -57,8 +58,6 @@ public class ElevatorSystemIMP implements ElevatorPanel, ElevatorSystem {
 		}
 	};
 
-	// CONSTRUCTORS //
-
 	public ElevatorSystemIMP(int MIN_FLOOR, int MAX_FLOOR) {
 		this.MIN_FLOOR = MIN_FLOOR;
 		this.MAX_FLOOR = MAX_FLOOR;
@@ -68,59 +67,48 @@ public class ElevatorSystemIMP implements ElevatorPanel, ElevatorSystem {
 
 	@Override
 	public void addElevator(Elevator elevator) {
-		// meaning ,creating ID for the elevator, the 1st = ID > 0 due to stops.size();
 		stops.put(elevator, new LinkedList<>());
-
 	}
 
 	@Override
 	public Elevator callUp(int floor) {
-		// elevator.moveTo(floor);
 		return call(floor, MovingState.Up);
 
 	}
 
 	@Override
 	public Elevator callDown(int floor) {
-		// elevator.moveTo(floor);
 		return call(floor, MovingState.Down);
-
 	}
 
 	@Override
 	public int getCurrentFloor() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("this method is currently not supported");
 	}
 
 	@Override
 	public int getFloorCount() {
-		// TODO Auto-generated method stub
 		return Math.abs(MIN_FLOOR - MAX_FLOOR) + 1;
 	}
 
 	@Override
 	public int getMaxFloor() {
-		// TODO Auto-generated method stub
 		return this.MAX_FLOOR;
 	}
 
 	@Override
 	public int getMinFloor() {
-		// TODO Auto-generated method stub
 		return this.MIN_FLOOR;
 	}
 
 	@Override
 	public double getPowerConsumed() {
 		double sumPowered = 0;
-		// loop throught all elevetors and sum up the powerused
 		for (Elevator e : stops.keySet()) {
-		
+
 			sumPowered+= e.getPowerConsumed();
 		}
 		return sumPowered;
-		
 	}
 
 	@Override
@@ -159,10 +147,7 @@ public class ElevatorSystemIMP implements ElevatorPanel, ElevatorSystem {
 
 	@Override
 	public void addObserver(Observer observer) {
-
-		// loop through all elevators in stops and add observer to each elevator
-		
-		for (Elevator e : stops.keySet()) {
+		for (Elevator e : stops.keySet() ) {
 			e.addObserver(observer);
 		}
 	}
@@ -176,17 +161,12 @@ public class ElevatorSystemIMP implements ElevatorPanel, ElevatorSystem {
 
 	@Override
 	public void start() {
-		// TODO Auto-generated method stub
-
-			inUse = new AtomicBoolean[stops.size()];
 		// initial inUse  by for loop
 		//by default is is false ;
-		
-		for (int i =0;i<= inUse.length;i++) {
+		inUse = new AtomicBoolean[stops.size()];
+		for (int i =0;i< 4;i++) {
 			inUse[i]= new AtomicBoolean();
 		}
-		
-
 		service.submit(run);
 	}
 
@@ -196,17 +176,15 @@ public class ElevatorSystemIMP implements ElevatorPanel, ElevatorSystem {
 	 * requestStops accept int arrays of floors , need to sort in order 
 	 * @see controller.ElevatorPanel#requestStops(model.Elevator, int[])
 	 */
-	
+
 	@Override
 	public void requestStops(Elevator elevator, int... floors) {
 
 		synchronized (REQUEST_LOCK) {
 
 			if (callDirection == MovingState.Up)
-				// quicksort asceding
 				QuickSort.quicksort(floors, 0, floors.length-1);
 			else
-				// descending
 				QuickSort.quicksortReverse(floors, 0, floors.length-1);
 
 			List<Integer> l = stops.get(elevator);
@@ -214,28 +192,25 @@ public class ElevatorSystemIMP implements ElevatorPanel, ElevatorSystem {
 		}
 	}
 
+
 	public Elevator getAvailableElevatorIndex(int floor) {
+		synchronized (REQUEST_LOCK) {
+			int smallest=Integer.MAX_VALUE;
 
-		// e.isIDE () and list.ISEmpty() and !inUSe[e.id()].get();
-		//find the best Elavator 
-		//if e is close to the floor -> e is closet to floor
-		//
-		
-		Elevator best = null;
-		int smallest = 0;
-		for (Elevator e : stops.keySet()) {
-			if (!elevator.isIdle() && !inUse[e.id()].get()) {
-				if (elevator.isEmpty() && elevator.getFloor() < smallest)
-					best = e;
-				//set the best == true 
-				inUse[best.id()].set(true);
-				smallest = Math.abs(e.getFloor() - floor);
-			} else
-				continue;
-
+			Elevator bestElevator = null;
+			for(Elevator elevator:stops.keySet()) {
+				if (elevator.isIdle()&& stops.get(elevator).isEmpty())
+				{
+					int temp= Math.abs(elevator.getFloor()-floor)+1; //if elevator is closest to floor
+					if (temp<smallest) {
+						bestElevator =elevator;
+						inUse[bestElevator.id()].set(true);
+						smallest=temp;
+					}
+				}
+			}
+			return bestElevator;
 		}
-		return best;
-
 	}
 
 }

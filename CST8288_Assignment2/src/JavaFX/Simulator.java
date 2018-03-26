@@ -11,8 +11,6 @@ import controller.ElevatorSystemIMP;
 import model.Elevator;
 import model.ElevatorImp;
 
-
-
 public class Simulator{
 
 	private static final int MIN_FLOOR = 0;
@@ -23,7 +21,7 @@ public class Simulator{
 
 	public Simulator( Observer observer, final int minFloor, final int maxFloor){
 		system = new ElevatorSystemIMP( minFloor, maxFloor);
-		//new ElevatorImp(int CAPACITY_PERSONS, ElevatorPanel p, int ID)
+
 		system.addElevator( new ElevatorImp( MAX_CAPACITY, (ElevatorPanel) system, system.getElevatorCount()));
 		system.addElevator( new ElevatorImp( MAX_CAPACITY, (ElevatorPanel) system, system.getElevatorCount()));
 		system.addElevator( new ElevatorImp( MAX_CAPACITY, (ElevatorPanel) system, system.getElevatorCount()));
@@ -57,7 +55,7 @@ public class Simulator{
 			elevator.requestStops( 12, 2, 5, 9, 20, 3);
 		}, 0, TimeUnit.MILLISECONDS);
 		se.schedule( () -> {
-			Elevator elevator = system.callDown( 20);
+			Elevator elevator = system.callDown(20);
 			System.out.println( "ID: " + elevator.id());
 			elevator.addPersons( 2);
 			elevator.requestStops( 11, 3, 6, 10, 19, 15);
